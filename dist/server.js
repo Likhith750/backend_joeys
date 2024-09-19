@@ -1,0 +1,58 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = __importDefault(require("express"));
+const body_parser_1 = __importDefault(require("body-parser"));
+const db_1 = __importDefault(require("./db"));
+const userRoutes_1 = __importDefault(require("./routes/userRoutes"));
+const studentRoutes_1 = __importDefault(require("./routes/studentRoutes"));
+const attendanceRoutes_1 = __importDefault(require("./routes/attendanceRoutes"));
+const checkedOutRoutes_1 = __importDefault(require("./routes/checkedOutRoutes"));
+const childDailyReportRoutes_1 = __importDefault(require("./routes/childDailyReportRoutes"));
+const circleTimeRoutes_1 = __importDefault(require("./routes/circleTimeRoutes"));
+const toiletUsageRoutes_1 = __importDefault(require("./routes/toiletUsageRoutes"));
+const childObservationRoutes_1 = __importDefault(require("./routes/childObservationRoutes"));
+const audioRoutes_1 = __importDefault(require("./routes/audioRoutes"));
+const video_routes_1 = __importDefault(require("./routes/video.routes"));
+const workUpdatesRoutes_1 = __importDefault(require("./routes/workUpdatesRoutes"));
+const crewMemberRoutes_1 = __importDefault(require("./routes/crewMemberRoutes"));
+const config_1 = __importDefault(require("./config/config"));
+const cors_1 = __importDefault(require("cors"));
+const uploadRoutes_1 = __importDefault(require("./routes/uploadRoutes"));
+const profileRoutes_1 = __importDefault(require("./routes/profileRoutes"));
+const NotificationRoutes_1 = __importDefault(require("./routes/NotificationRoutes"));
+const feedback_routes_1 = __importDefault(require("./routes/feedback.routes"));
+const dailyReportRoutes_1 = __importDefault(require("./routes/dailyReportRoutes"));
+const app = (0, express_1.default)();
+(0, db_1.default)();
+app.use((0, cors_1.default)());
+app.use(express_1.default.json());
+app.use(body_parser_1.default.urlencoded({ extended: true }));
+app.use('/api/users', userRoutes_1.default);
+app.use('/api/students', studentRoutes_1.default);
+app.use('/api/attendance', attendanceRoutes_1.default);
+app.use('/api/checked-out', checkedOutRoutes_1.default);
+app.use('/api/child-daily-reports', childDailyReportRoutes_1.default);
+app.use('/api/circle-time-reports', circleTimeRoutes_1.default);
+app.use('/api/toilet-usages', toiletUsageRoutes_1.default);
+app.use('/api/child-observations', childObservationRoutes_1.default);
+app.use('/api/upload-audio', audioRoutes_1.default);
+app.use('/api/video', video_routes_1.default);
+app.use('/api/work-updates', workUpdatesRoutes_1.default);
+app.use('/api/crewMembers', crewMemberRoutes_1.default);
+app.use('/api/upload', uploadRoutes_1.default);
+app.use('/api/profile', profileRoutes_1.default);
+app.use('/api/notification', NotificationRoutes_1.default);
+app.use('/api/feedback', feedback_routes_1.default);
+app.use('/api/dailyReports', dailyReportRoutes_1.default);
+// Centralized error handling middleware
+app.use((err, req, res, next) => {
+    console.error(err.stack);
+    res.status(500).json({ message: 'An internal server error occurred.' });
+});
+const PORT = config_1.default.PORT || 5000;
+app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+});
