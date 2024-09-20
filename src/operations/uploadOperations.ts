@@ -158,3 +158,5 @@ app.get('/images', getAllImages);
 // Route to handle retrieving an image by name
 app.get('/images/:name', getImageByName);
 
+
+check for errors
