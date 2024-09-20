@@ -1,4 +1,4 @@
-import express, { Request, Response, NextFunction } from 'express';
+import express, { Request, Response } from 'express';
 import mongoose, { Schema, Document } from 'mongoose';
 import sharp from 'sharp';
 import multer from 'multer';
@@ -22,11 +22,8 @@ const ImageSchema: Schema = new Schema({
 // Create the Image model
 const Image = mongoose.model<IImage>('Image', ImageSchema);
 
-// Multer setup with file size limit (10MB)
-const upload = multer({
-    storage: multer.memoryStorage(),
-    limits: { fileSize: 10 * 1024 * 1024 }, // 10MB file limit
-});
+// Multer setup
+const upload = multer({ storage: multer.memoryStorage() });
 
 // Function to save images with categories
 export const saveImages = async (files: Express.Multer.File[], category: 'daily' | 'event' | 'activity'): Promise<IImage[]> => {
@@ -137,17 +134,13 @@ const port = 5000;
 // Route to handle multiple image uploads
 app.post('/upload', upload.array('images'), async (req: Request, res: Response) => {
     const { category } = req.body; // Category should be passed in the request body
-    const files = req.files as Express.Multer.File[] | undefined;
-
-    if (!files || files.length === 0) {
-        return res.status(400).send('No files uploaded.');
-    }
 
     if (!category || !['daily', 'event', 'activity'].includes(category)) {
         return res.status(400).send('Invalid or missing category');
     }
 
     try {
+        const files = req.files as Express.Multer.File[];
         const savedImages = await saveImages(files, category);
         res.status(200).json(savedImages);
     } catch (error: unknown) {
@@ -164,12 +157,4 @@ app.get('/images', getAllImages);
 
 // Route to handle retrieving an image by name
 app.get('/images/:name', getImageByName);
-
-// Global error handler for multer errors
-app.use((err: any, req: Request, res: Response, next: NextFunction) => {
-    if (err instanceof multer.MulterError) {
-        return res.status(400).send(`Multer error: ${err.message}`);
-    }
-    next(err);
-});
 
