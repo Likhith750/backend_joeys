@@ -16,7 +16,7 @@ export const createUser = async (
         await user.save();
         return user;
     } catch (error) {
-        console.error('Error creating user:', error);
+        console.error('Error creating user:', error instanceof Error ? error.message : error);
         return null;
     }
 };
@@ -32,7 +32,7 @@ export const userLogin = async (email: string, password: string): Promise<IUser 
 
         return user;
     } catch (error) {
-        console.error('Error logging in user:', error);
+        console.error('Error logging in user:', error instanceof Error ? error.message : error);
         return null;
     }
 };
@@ -46,7 +46,7 @@ export const getUserDetails = async (identifier: string): Promise<IUser | null> 
         });
         return user;
     } catch (error) {
-        console.error('Error getting user details:', error);
+        console.error('Error getting user details:', error instanceof Error ? error.message : error);
         return null;
     }
 };
@@ -70,7 +70,7 @@ export const changePassword = async (
 
         return user;
     } catch (error) {
-        console.error('Error changing user password:', error);
+        console.error('Error changing user password:', error instanceof Error ? error.message : error);
         return null;
     }
 };
@@ -94,11 +94,10 @@ export const sendOtp = async (email: string): Promise<{ success: boolean }> => {
         await user.save();
 
         // Send OTP to the user's email address
-        // Replace with actual email sending logic
         console.log(`OTP sent to ${email}: ${otp}`);
         return { success: true };
     } catch (error) {
-        console.error('Error sending OTP:', error);
+        console.error('Error sending OTP:', error instanceof Error ? error.message : error);
         return { success: false };
     }
 };
@@ -117,7 +116,7 @@ export const validateOtp = async (email: string, otp: string): Promise<{ success
         await user.save();
         return { success: true };
     } catch (error) {
-        console.error('Error validating OTP:', error);
+        console.error('Error validating OTP:', error instanceof Error ? error.message : error);
         return { success: false };
     }
 };
@@ -140,9 +139,7 @@ export const resetPassword = async (
 
         return { success: true };
     } catch (error) {
-        console.error('Error resetting user password:', error);
+        console.error('Error resetting user password:', error instanceof Error ? error.message : error);
         return { success: false };
     }
 };
-
-//finish
