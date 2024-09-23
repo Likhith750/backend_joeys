@@ -1,7 +1,5 @@
-// operations/UserOperations.ts
-
 import User, { IUser } from '../models/User';
-import crypto from 'crypto';
+import bcrypt from 'bcrypt';
 
 // Function to create a new user with fullname included
 export const createUser = async (
@@ -9,10 +7,12 @@ export const createUser = async (
     email: string, 
     password: string, 
     role: 'admin' | 'teacher' | 'student',
-    fullname: string  // Added fullname as a parameter
+    fullname: string
 ): Promise<IUser | null> => {
     try {
-        const user = new User({ username, email, password, role, fullname });  // Include fullname in user creation
+        // Hash the password before saving
+        const hashedPassword = await bcrypt.hash(password, 10);  // 10 is the salt rounds
+        const user = new User({ username, email, password: hashedPassword, role, fullname });
         await user.save();
         return user;
     } catch (error) {
@@ -26,8 +26,10 @@ export const userLogin = async (email: string, password: string): Promise<IUser 
     try {
         const user = await User.findOne({ email });
         if (!user) return null;
-        const isMatch = await user.comparePassword(password);
+
+        const isMatch = await bcrypt.compare(password, user.password);  // Compare hashed password
         if (!isMatch) return null;
+
         return user;
     } catch (error) {
         console.error('Error logging in user:', error);
@@ -35,10 +37,10 @@ export const userLogin = async (email: string, password: string): Promise<IUser 
     }
 };
 
-// Function to get a user by email or fullName
+// Function to get a user by email or fullname
 export const getUserDetails = async (identifier: string): Promise<IUser | null> => {
     try {
-        // Search by email or fullName
+        // Search by email or fullname
         const user = await User.findOne({
             $or: [{ email: identifier }, { fullname: identifier }]
         });
@@ -49,7 +51,7 @@ export const getUserDetails = async (identifier: string): Promise<IUser | null> 
     }
 };
 
-// Change password
+// Change password function
 export const changePassword = async (
     email: string,
     oldPassword: string,
@@ -59,10 +61,13 @@ export const changePassword = async (
         const user = await User.findOne({ email });
         if (!user) return null;
 
-        const isMatch = await user.comparePassword(oldPassword);
+        const isMatch = await bcrypt.compare(oldPassword, user.password);  // Compare old password with hashed password
         if (!isMatch) return null;
 
-        await user.changePassword(newPassword);
+        const hashedNewPassword = await bcrypt.hash(newPassword, 10);  // Hash the new password
+        user.password = hashedNewPassword;
+        await user.save();
+
         return user;
     } catch (error) {
         console.error('Error changing user password:', error);
@@ -128,7 +133,10 @@ export const resetPassword = async (
             return { success: false };
         }
 
-        await user.changePassword(newPassword);
+        // Hash the new password before resetting
+        const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+        user.password = hashedNewPassword;
+        await user.save();
 
         return { success: true };
     } catch (error) {
