@@ -7,8 +7,6 @@ export interface IUser extends Document {
     password: string;
     role: 'admin' | 'teacher' | 'student';
     fullname: string;
-    otp?: string;
-    otpExpiry?: Date;
     resetPasswordToken?: string;
     resetPasswordExpiry?: Date;
     comparePassword(candidatePassword: string): Promise<boolean>;
@@ -21,8 +19,6 @@ const UserSchema: Schema<IUser> = new Schema({
     password: { type: String, required: true },
     role: { type: String, enum: ['admin', 'teacher', 'student'], required: true },
     fullname: { type: String, required: true },
-    otp: { type: String },
-    otpExpiry: { type: Date },
     resetPasswordToken: { type: String },
     resetPasswordExpiry: { type: Date },
 });
@@ -38,7 +34,6 @@ UserSchema.methods.changePassword = async function(newPassword: string): Promise
     this.password = hashedPassword;
     await this.save();
 };
-
 
 const User = mongoose.model<IUser>('User', UserSchema);
 
