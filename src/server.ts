@@ -20,6 +20,7 @@ import profileRoutes from './routes/profileRoutes';
 import notificationRoutes from './routes/NotificationRoutes';
 import feedbackRoutes from './routes/feedback.routes';
 import dailyReportRoutes from './routes/dailyReportRoutes';
+import otpRoutes from './routes/otp.routes';
 
 
 const app = express();
@@ -47,6 +48,7 @@ app.use('/api/profile', profileRoutes);
 app.use('/api/notification', notificationRoutes);
 app.use('/api/feedback', feedbackRoutes);
 app.use('/api/dailyReports', dailyReportRoutes);
+app.use('/api/otp', otpRoutes);
 
 // Centralized error handling middleware
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
