@@ -1,87 +1,66 @@
-import User, { IUser } from '../models/User';
+import express from 'express';
+import { createUser, userLogin, getUserDetails, changePassword, resetPassword } from '../operations/userOperations';
 
-// Function to create a new user with fullname included
-export const createUser = async (
-    username: string, 
-    email: string, 
-    password: string, 
-    role: 'admin' | 'teacher' | 'student',
-    fullname: string
-): Promise<IUser | null> => {
-    try {
-        const user = new User({ username, email, password, role, fullname });
-        await user.save();
-        return user;
-    } catch (error) {
-        console.error('Error creating user:', error);
-        return null;
-    }
-};
+const router = express.Router();
 
-// Function to handle user login
-export const userLogin = async (email: string, password: string): Promise<IUser | null> => {
-    try {
-        const user = await User.findOne({ email });
-        if (!user) return null;
-        const isMatch = await user.comparePassword(password);
-        if (!isMatch) return null;
-        return user;
-    } catch (error) {
-        console.error('Error logging in user:', error);
-        return null;
+// Register a new user with a role and fullname
+router.post('/register', async (req, res) => {
+    const { username, email, password, role, fullname } = req.body;
+    const user = await createUser(username, email, password, role, fullname);
+    if (!user) {
+        return res.status(400).json({ error: true, message: 'User already exists or error occurred' });
     }
-};
+    res.status(201).json({ error: false, message: 'User registered successfully', user });
+});
 
-// Function to get a user by email or fullname
-export const getUserDetails = async (identifier: string): Promise<IUser | null> => {
-    try {
-        const user = await User.findOne({
-            $or: [{ email: identifier }, { fullname: identifier }]
-        });
-        return user;
-    } catch (error) {
-        console.error('Error getting user details:', error);
-        return null;
+// User login
+router.post('/login', async (req, res) => {
+    const { email, password } = req.body;
+    const user = await userLogin(email, password);
+    if (!user) {
+        return res.status(400).json({ error: true, message: 'Invalid email or password' });
     }
-};
+    res.status(200).json({ error: false, message: 'Login successful', user });
+});
+
+// Get user details by email or fullname
+router.get('/user/:identifier', async (req, res) => {
+    const { identifier } = req.params;
+    const user = await getUserDetails(identifier);
+    if (!user) {
+        return res.status(404).json({ error: true, message: 'User not found' });
+    }
+    res.status(200).json({ error: false, fullName: user.fullname });
+});
 
 // Change password
-export const changePassword = async (
-    email: string,
-    oldPassword: string,
-    newPassword: string
-): Promise<IUser | null> => {
-    try {
-        const user = await User.findOne({ email });
-        if (!user) return null;
+router.post('/change-password', async (req, res) => {
+    const { email, oldPassword, newPassword } = req.body;
 
-        const isMatch = await user.comparePassword(oldPassword);
-        if (!isMatch) return null;
-
-        await user.changePassword(newPassword);
-        return user;
-    } catch (error) {
-        console.error('Error changing user password:', error);
-        return null;
+    if (!email || !oldPassword || !newPassword) {
+        return res.status(400).json({ error: true, message: 'All fields are required' });
     }
-};
 
-// Reset password without using a token
-export const resetPassword = async (
-    email: string,
-    newPassword: string
-): Promise<{ success: boolean }> => {
     try {
-        const user = await User.findOne({ email });
+        const user = await changePassword(email, oldPassword, newPassword);
         if (!user) {
-            return { success: false };
+            return res.status(400).json({ error: true, message: 'Invalid email or password' });
         }
-
-        await user.changePassword(newPassword);
-
-        return { success: true };
+        res.status(200).json({ error: false, message: 'Password changed successfully' });
     } catch (error) {
-        console.error('Error resetting user password:', error);
-        return { success: false };
+        console.error('Error in /change-password route:', error);
+        res.status(500).json({ error: true, message: 'Internal server error' });
     }
-};
+});
+
+// Reset password
+router.post('/reset-password', async (req, res) => {
+    const { email, newPassword } = req.body;
+    const { success } = await resetPassword(email, newPassword);
+    if (!success) {
+        return res.status(400).json({ error: true, message: 'User not found or error resetting password' });
+    }
+    res.status(200).json({ error: false, message: 'Password reset successfully', success: true });
+});
+
+export default router;
