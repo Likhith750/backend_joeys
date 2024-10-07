@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import { saveOtp, verifyOtp, deleteOtpByEmail ,sendOtpEmail} from '../operations/otp.operations';
+import { saveOtp, verifyOtp, deleteOtpByEmail, sendOtpEmail } from '../operations/otp.operations';
 
 const router = Router();
 
@@ -22,10 +22,11 @@ router.post('/store-otp', async (req: Request, res: Response) => {
 });
 
 // POST /verify-otp
+// POST /verify-otp
 router.post('/verify-otp', async (req: Request, res: Response) => {
     const { email, otp } = req.body;
     if (!email || !otp) {
-        return res.status(400).json({ message: 'Email and OTP are required' });
+        return res.status(400).json({ success: false, message: 'Email and OTP are required' });
     }
 
     try {
@@ -34,14 +35,16 @@ router.post('/verify-otp', async (req: Request, res: Response) => {
         if (isValid) {
             // Optionally, delete OTP after successful verification
             await deleteOtpByEmail(email);
-            return res.status(200).json({ message: 'OTP verified successfully' });
+            return res.status(200).json({ success: true, message: 'OTP verified successfully' });
         } else {
-            return res.status(400).json({ message: 'Invalid OTP or OTP has expired' });
+            // OTP is invalid or expired
+            return res.status(400).json({ success: false, message: 'Invalid OTP or OTP has expired' });
         }
     } catch (error) {
         console.error('Error verifying OTP:', error);
-        return res.status(500).json({ message: 'Failed to verify OTP' });
+        return res.status(500).json({ success: false, message: 'Failed to verify OTP' });
     }
 });
+
 
 export default router;
