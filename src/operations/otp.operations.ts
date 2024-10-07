@@ -1,13 +1,20 @@
 import Otp, { IOtp } from '../models/otp.model';
+import User from '../models/User'; // Import the User model
 import nodemailer from 'nodemailer';
 
 // Save OTP to the database (Frontend sends the OTP)
-export const saveOtp = async (email: string, otp: string): Promise<IOtp> => {
+export const saveOtp = async (email: string, otp: string): Promise<IOtp | null> => {
+    // Check if the user exists
+    const userExists = await User.findOne({ email });
+    if (!userExists) {
+        throw new Error('User does not exist');
+    }
+
     const expiresIn = 10 * 60 * 1000; // OTP expires in 10 minutes
     const otpEntry = new Otp({
         email,
         otp,
-        expiresAt: new Date(Date.now() + expiresIn)
+        expiresAt: new Date(Date.now() + expiresIn),
     });
     return await otpEntry.save();
 };
